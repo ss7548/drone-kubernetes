@@ -32,17 +32,29 @@ fi
 kubectl config set-context default --cluster=default --user=${PLUGIN_KUBERNETES_USER}
 kubectl config use-context default
 
+TAG=${PLUGIN_TAG}
+
+# Use .tags file option
+# Default is FALSE unless value of USE_TAGS_FILE is one of y,Y,t,T,true,TRUE,yes,YES
+# the .tags file was used by the docker plugin when we created out container
+# a .tags file is a comma separated list of tags: 1.0.1,1.0,1,latest (see docker plugin docs)
+# We will use the first tag in the list, so create your file accordingly
+
+USE_TAGS_FILE=`echo $PLUGIN_USE_TAGS_FILE | tr [a-z] [A-Z]`
+[[ "X$USE_TAGS_FILE" == "XY" ]] || [[ "X$USE_TAGS_FILE" == "XTRUE" ]] || [[ "X$USE_TAGS_FILE" == "XYES" ]] && USE_TAGS_FILE=T
+[[ -f .tags ]] && [[ "X$USE_TAGS_FILE" == "XT" ]] && TAG=`cat .tags | tr -d \" | cut -d, -f1`
+
 # kubectl version
 IFS=',' read -r -a DEPLOYMENTS <<< "${PLUGIN_DEPLOYMENT}"
 IFS=',' read -r -a CONTAINERS <<< "${PLUGIN_CONTAINER}"
 for DEPLOY in ${DEPLOYMENTS[@]}; do
-  echo Deploying to $KUBERNETES_SERVER
+  echo Deploying ${PLUGIN_REPO}:${TAG} to $KUBERNETES_SERVER
   for CONTAINER in ${CONTAINERS[@]}; do
     if [[ ${PLUGIN_FORCE} == "true" ]]; then
       kubectl -n ${PLUGIN_NAMESPACE} set image deployment/${DEPLOY} \
-        ${CONTAINER}=${PLUGIN_REPO}:${PLUGIN_TAG}FORCE
+        ${CONTAINER}=${PLUGIN_REPO}:${TAG}FORCE
     fi
     kubectl -n ${PLUGIN_NAMESPACE} set image deployment/${DEPLOY} \
-      ${CONTAINER}=${PLUGIN_REPO}:${PLUGIN_TAG} --record
+      ${CONTAINER}=${PLUGIN_REPO}:${TAG} --record
   done
 done
