@@ -83,6 +83,30 @@ This more complex example demonstrates how to deploy to several environments bas
                 branch: [ master ]
 ```
 
+**_Version 1.0_ example for using a .tags file**
+
+Use .tags file option: USE_TAGS_FILE<br/>
+The default is FALSE unless the value of USE_TAGS_FILE is one of: y,Y,t,T,true,TRUE,yes,YES<br/>
+The .tags file was used by the docker plugin when we created out container<br/>
+A .tags file is a comma separated list of tags: 1.0.1,1.0,1,latest (see docker plugin docs)<br/>
+We will use the first tag in the list, so create your file accordingly
+
+
+```yaml
+- name: kubernetes-deploy
+  image: quay.io/honestbee/drone-kubernetes
+  settings:
+    kubernetes_server: 
+      from_secret: KUBERNETES_SERVER
+    kubernetes_token: 
+      from_secret: KUBERNETES_TOKEN
+    deployment: my-deployment
+    repo: myorg/myrepo
+    container: my-container
+    namespace: app
+    use_tags_file: true
+```
+
 ## Required secrets
 
 ```bash
